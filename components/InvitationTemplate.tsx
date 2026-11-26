@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 
 export interface InvitationConfig {
   theme: 'sage' | 'gold' | 'rose' | 'dark';
@@ -78,6 +78,7 @@ export default function InvitationTemplate({
     e.preventDefault();
     if (!rsvpName.trim() || !message.trim()) return;
     setSending(true);
+    const supabase = getSupabase();
 
     const { data, error } = await supabase
       .from('rsvps')

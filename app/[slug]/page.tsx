@@ -1,18 +1,19 @@
 import { notFound } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 import InvitationTemplate from '@/components/InvitationTemplate';
 import type { Metadata } from 'next';
 
-export const dynamic = 'force-dynamic'; // Agar data baru langsung tampil tanpa cache lama
+export const dynamic = 'force-dynamic';
 
 type Props = {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ to?: string }>;
 };
 
-// 1. Otomatis membuat Preview Thumbnail saat link disebar di WhatsApp
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
+  const supabase = getSupabase();
+
   const { data } = await supabase
     .from('invitations')
     .select('config')
@@ -24,17 +25,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const cfg = data.config;
   return {
     title: `Undangan Pernikahan ${cfg.groomName} & ${cfg.brideName}`,
-    description: `Tanpa mengurangi rasa hormat, kami mengundang Anda hadir di hari bahagia kami.`,
+    description: 'Tanpa mengurangi rasa hormat, kami mengundang Anda hadir di hari bahagia kami.',
     openGraph: {
       images: [cfg.coverPhoto || 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800'],
     },
   };
 }
 
-// 2. Halaman Utama Undangan Konsumen
 export default async function PublicInvitationPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const { to } = await searchParams;
+  const supabase = getSupabase();
 
   const { data: invitation } = await supabase
     .from('invitations')
@@ -46,7 +47,6 @@ export default async function PublicInvitationPage({ params, searchParams }: Pro
     notFound();
   }
 
-  // Jika belum bayar
   if (invitation.status !== 'active') {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-slate-50">
@@ -58,7 +58,6 @@ export default async function PublicInvitationPage({ params, searchParams }: Pro
     );
   }
 
-  // Ambil daftar ucapan RSVP untuk undangan ini
   const { data: rsvps } = await supabase
     .from('rsvps')
     .select('*')

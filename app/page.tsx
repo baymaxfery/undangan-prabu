@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 import type { InvitationConfig } from '@/components/InvitationTemplate';
 
 const DEFAULT_PHOTO =
@@ -57,6 +57,7 @@ export default function StudioEditorPage() {
   async function handlePublish() {
     setLoading(true);
     try {
+      const supabase = getSupabase();
       let finalPhotoUrl = config.coverPhoto;
 
       // Upload foto ke Supabase Storage jika user memilih foto sendiri
