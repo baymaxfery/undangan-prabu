@@ -19,7 +19,7 @@ export async function POST(req: Request) {
       .from('invitations')
       .select('id')
       .eq('slug', cleanSlug)
-      .single();
+      .maybeSingle();
 
     if (existing) {
       return NextResponse.json(
@@ -38,11 +38,16 @@ export async function POST(req: Request) {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      return NextResponse.json(
+        { error: `Supabase Error: ${error.message}` },
+        { status: 400 }
+      );
+    }
 
     return NextResponse.json({ success: true, slug: data.slug });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Gagal menyimpan undangan';
+    const message = err instanceof Error ? err.message : JSON.stringify(err);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
