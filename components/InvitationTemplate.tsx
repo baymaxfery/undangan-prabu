@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getSupabase } from '@/lib/supabase';
 
 export interface InvitationConfig {
@@ -17,6 +17,16 @@ export interface InvitationConfig {
   resepsiLocation: string;
   quote: string;
   coverPhoto: string;
+  showGallery?: boolean;
+  galleryPhotos?: string[];
+  showStory?: boolean;
+  story1Title?: string;
+  story1Desc?: string;
+  story2Title?: string;
+  story2Desc?: string;
+  showMusic?: boolean;
+  musicMode?: 'builtin' | 'custom';
+  musicUrl?: string;
   showRsvp: boolean;
   showGift: boolean;
   bankName: string;
@@ -50,6 +60,7 @@ export default function InvitationTemplate({
   initialRsvps: RsvpItem[];
 }) {
   const [isOpened, setIsOpened] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [rsvps, setRsvps] = useState<RsvpItem[]>(initialRsvps);
   const [rsvpName, setRsvpName] = useState(guestName !== 'Bapak/Ibu/Saudara/i' ? guestName : '');
   const [attendance, setAttendance] = useState('hadir');
@@ -57,8 +68,14 @@ export default function InvitationTemplate({
   const [sending, setSending] = useState(false);
   const [countdown, setCountdown] = useState({ d: '00', h: '00', m: '00', s: '00' });
 
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const melodyTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const t = THEMES[config.theme] || THEMES.sage;
   const coupleShort = `${config.groomName.split(' ')[0]} & ${config.brideName.split(' ')[0]}`;
+  const showMusic = config.showMusic ?? true;
+  const galleryPhotos = config.galleryPhotos ?? [];
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -73,6 +90,65 @@ export default function InvitationTemplate({
     }, 1000);
     return () => clearInterval(timer);
   }, [config.eventDate]);
+
+  useEffect(() => {
+    return () => {
+      if (melodyTimerRef.current) clearInterval(melodyTimerRef.current);
+      if (audioCtxRef.current) audioCtxRef.current.close().catch(() => {});
+    };
+  }, []);
+
+  function startMusic() {
+    if (!showMusic) return;
+    setIsPlaying(true);
+
+    if (config.musicMode === 'custom' && config.musicUrl && audioRef.current) {
+      audioRef.current.play().catch(() => {});
+      return;
+    }
+
+    const AudioCtx =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!audioCtxRef.current) audioCtxRef.current = new AudioCtx();
+    const ctx = audioCtxRef.current;
+    const notes = [261.63, 329.63, 392.0, 493.88, 440.0, 392.0, 329.63, 293.66];
+    let step = 0;
+
+    const playNote = () => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(notes[step % notes.length], ctx.currentTime);
+      gain.gain.setValueAtTime(0.05, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.2);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 1.2);
+      step++;
+    };
+
+    playNote();
+    if (melodyTimerRef.current) clearInterval(melodyTimerRef.current);
+    melodyTimerRef.current = setInterval(playNote, 700);
+  }
+
+  function stopMusic() {
+    setIsPlaying(false);
+    if (audioRef.current) audioRef.current.pause();
+    if (melodyTimerRef.current) {
+      clearInterval(melodyTimerRef.current);
+      melodyTimerRef.current = null;
+    }
+  }
+
+  function handleOpenInvitation() {
+    setIsOpened(true);
+    if (showMusic && !isPlaying) {
+      startMusic();
+    }
+  }
 
   async function handleRsvpSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -109,11 +185,15 @@ export default function InvitationTemplate({
 
   return (
     <div className="min-h-screen flex justify-center bg-slate-200">
+      {config.musicMode === 'custom' && config.musicUrl && (
+        <audio ref={audioRef} src={config.musicUrl} loop />
+      )}
+
       <div
         className="w-full max-w-md min-h-screen shadow-2xl relative overflow-hidden"
         style={{ backgroundColor: t.bg, color: t.text }}
       >
-        {/* Sampul Pembuka */}
+        {/* Sampul Pembuka (Dikirim Untuk Siapa) */}
         {!isOpened && (
           <div className="fixed inset-0 z-50 flex justify-center bg-black/80">
             <div className="w-full max-w-md relative flex flex-col justify-between items-center text-center p-8 text-white">
@@ -136,7 +216,7 @@ export default function InvitationTemplate({
                   <p className="text-base font-bold">{guestName}</p>
                 </div>
                 <button
-                  onClick={() => setIsOpened(true)}
+                  onClick={handleOpenInvitation}
                   style={{ backgroundColor: t.accent }}
                   className="w-full py-3.5 rounded-full text-xs font-bold uppercase tracking-wider text-white shadow-lg"
                 >
@@ -145,6 +225,30 @@ export default function InvitationTemplate({
               </div>
             </div>
           </div>
+        )}
+
+        {/* Tombol Musik Melayang */}
+        {isOpened && showMusic && (
+          <button
+            onClick={() => (isPlaying ? stopMusic() : startMusic())}
+            title={isPlaying ? 'Matikan Musik' : 'Putar Musik'}
+            className="fixed bottom-5 right-5 z-40 w-11 h-11 rounded-full bg-black/75 text-white border border-white/30 flex items-center justify-center shadow-lg"
+          >
+            <svg
+              className={`w-5 h-5 ${isPlaying ? 'animate-spin' : ''}`}
+              style={{ animationDuration: '5s' }}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+              />
+            </svg>
+          </button>
         )}
 
         {/* Hero */}
@@ -214,7 +318,46 @@ export default function InvitationTemplate({
             )}
           </div>
 
-          {/* RSVP Asli Tersimpan ke Supabase */}
+          {/* Cerita Cinta */}
+          {config.showStory && (
+            <div
+              className="rounded-2xl p-5 border shadow-sm text-left space-y-3"
+              style={{ backgroundColor: t.card, borderColor: t.border }}
+            >
+              <p className="text-xs font-bold text-center uppercase tracking-wider opacity-80">
+                Cerita Cinta
+              </p>
+              <div className="border-l-2 border-current/20 pl-3 space-y-3">
+                <div>
+                  <p className="text-xs font-bold">{config.story1Title}</p>
+                  <p className="text-[11px] opacity-75 mt-0.5">{config.story1Desc}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-bold">{config.story2Title}</p>
+                  <p className="text-[11px] opacity-75 mt-0.5">{config.story2Desc}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Album / Galeri Foto */}
+          {config.showGallery && galleryPhotos.length > 0 && (
+            <div className="space-y-3">
+              <p className="text-xs font-bold uppercase tracking-wider opacity-80">Galeri Momen</p>
+              <div className="grid grid-cols-2 gap-2.5">
+                {galleryPhotos.map((src, idx) => (
+                  <img
+                    key={idx}
+                    src={src}
+                    alt={`Galeri ${idx + 1}`}
+                    className="w-full h-36 object-cover rounded-xl shadow-sm"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* RSVP */}
           {config.showRsvp && (
             <div
               className="rounded-2xl p-5 border shadow-sm text-left space-y-3"
