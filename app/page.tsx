@@ -4,6 +4,9 @@ import { useState } from 'react';
 import { getSupabase } from '@/lib/supabase';
 import type { InvitationConfig } from '@/components/InvitationTemplate';
 
+// GANTI NOMOR WHATSAPP ANDA DI SINI (Awali dengan 62, contoh: 6281234567890)
+const ADMIN_WHATSAPP = '6282282948311';
+
 const DEFAULT_PHOTO =
   'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80';
 
@@ -33,7 +36,8 @@ export default function StudioEditorPage() {
     showResepsi: true,
     resepsiTime: '11:00 - 14:00 WIB',
     resepsiLocation: 'Grand Ballroom Hotel Mulia, Jakarta',
-    quote: 'Dan di antara tanda-tanda kekuasaan-Nya ialah Dia menciptakan untukmu pasangan hidup agar kamu merasa tenteram.',
+    quote:
+      'Dan di antara tanda-tanda kekuasaan-Nya ialah Dia menciptakan untukmu pasangan hidup agar kamu merasa tenteram.',
     coverPhoto: DEFAULT_PHOTO,
     showRsvp: true,
     showGift: true,
@@ -60,7 +64,6 @@ export default function StudioEditorPage() {
       const supabase = getSupabase();
       let finalPhotoUrl = config.coverPhoto;
 
-      // Upload foto ke Supabase Storage jika user memilih foto sendiri
       if (photoFile) {
         const ext = photoFile.name.split('.').pop() || 'jpg';
         const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
@@ -96,26 +99,51 @@ export default function StudioEditorPage() {
 
   const t = THEMES[config.theme];
   const coupleShort = `${config.groomName.split(' ')[0]} & ${config.brideName.split(' ')[0]}`;
+  const waHelpUrl = `https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(
+    'Halo Admin UndanganPrabu, saya sedang mencoba membuat undangan website.'
+  )}`;
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-800">
-      <header className="bg-white border-b px-6 h-16 flex items-center justify-between sticky top-0 z-20">
-        <span className="font-bold text-xl">
-          Undangan<span className="text-indigo-600">Prabu</span>
-        </span>
-        <button
-          onClick={handlePublish}
-          disabled={loading}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl disabled:opacity-50"
-        >
-          {loading ? 'Menyimpan...' : 'Publikasikan Undangan'}
-        </button>
+      <header className="bg-white border-b px-4 sm:px-6 h-16 flex items-center justify-between sticky top-0 z-20">
+        <div className="flex items-center gap-3">
+          <span className="font-bold text-xl">
+            Undangan<span className="text-indigo-600">Prabu</span>
+          </span>
+          <span className="hidden sm:inline-flex items-center gap-1.5 text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-full font-semibold">
+            <span className="line-through text-slate-400 font-normal">Rp 99.000</span>
+            GRATIS (Uji Coba)
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2 sm:gap-3">
+          <a
+            href={waHelpUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="hidden sm:inline-block text-xs font-semibold text-slate-600 hover:text-emerald-600 px-3 py-2"
+          >
+            Chat Admin (WA)
+          </a>
+          <button
+            onClick={handlePublish}
+            disabled={loading}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-semibold px-4 sm:px-5 py-2.5 rounded-xl disabled:opacity-50"
+          >
+            {loading ? 'Menyimpan...' : 'Buat Gratis Sekarang'}
+          </button>
+        </div>
       </header>
 
-      <main className="max-w-6xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <main className="max-w-6xl mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Form Editor */}
         <section className="lg:col-span-7 bg-white p-6 rounded-2xl border space-y-5">
-          <h1 className="text-lg font-bold">Kustomisasi Undangan</h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-lg font-bold">Kustomisasi Undangan</h1>
+            <span className="sm:hidden text-[11px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-semibold">
+              Gratis Uji Coba
+            </span>
+          </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {(['sage', 'gold', 'rose', 'dark'] as const).map((key) => (
@@ -269,25 +297,47 @@ export default function StudioEditorPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center space-y-4">
             <h3 className="text-lg font-bold text-emerald-600">Undangan Berhasil Dibuat!</h3>
-            <p className="text-xs text-slate-500">Link undangan Anda sudah aktif dan siap disebar:</p>
+            <p className="text-xs text-slate-500">
+              Link undangan uji coba gratis Anda sudah aktif dan siap disebar:
+            </p>
             <div className="bg-slate-100 p-3 rounded-xl text-xs font-bold break-all">
               {window.location.origin}/{createdSlug}
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => setCreatedSlug(null)}
+                onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}/${createdSlug}`);
+                  alert('Link disalin!');
+                }}
                 className="w-1/2 py-2.5 rounded-xl border text-xs font-semibold"
               >
-                Tutup
+                Salin Link
               </button>
               <a
                 href={`/${createdSlug}?to=Tamu+Spesial`}
                 target="_blank"
+                rel="noreferrer"
                 className="w-1/2 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-semibold"
               >
                 Buka Undangan
               </a>
             </div>
+            <a
+              href={`https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(
+                `Halo Admin, saya sudah membuat undangan uji coba: ${window.location.origin}/${createdSlug}`
+              )}`}
+              target="_blank"
+              rel="noreferrer"
+              className="block text-xs text-emerald-600 font-semibold hover:underline"
+            >
+              Konfirmasi / Tanya Admin via WhatsApp
+            </a>
+            <button
+              onClick={() => setCreatedSlug(null)}
+              className="text-xs text-slate-400 hover:text-slate-600"
+            >
+              Tutup
+            </button>
           </div>
         </div>
       )}
