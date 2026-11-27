@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { getSupabase } from '@/lib/supabase';
+import FloatingLeaves from '@/components/FloatingLeaves';
 import type { InvitationConfig } from '@/components/InvitationTemplate';
 
 // GANTI NOMOR WHATSAPP ANDA DI SINI (Awali dengan 62, contoh: 6281234567890)
@@ -22,6 +23,7 @@ const THEMES = {
   gold: { bg: '#fdfbf7', text: '#3d3122', card: '#ffffff', accent: '#b8860b' },
   rose: { bg: '#fff5f6', text: '#4a2c35', card: '#ffffff', accent: '#d46a7e' },
   dark: { bg: '#141417', text: '#f3f4f6', card: '#1f1f24', accent: '#d4af37' },
+  garden: { bg: '#f4f8f2', text: '#243b29', card: '#ffffff', accent: '#4a7c59' },
 };
 
 interface GalleryItem {
@@ -230,7 +232,7 @@ export default function StudioEditorPage() {
                 <div>
                   <label className="block text-sm font-semibold mb-2">Pilih Tema Warna</label>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {(['sage', 'gold', 'rose', 'dark'] as const).map((key) => (
+                    {(['sage', 'gold', 'rose', 'dark', 'garden'] as const).map((key) => (
                       <button
                         key={key}
                         type="button"
@@ -579,6 +581,7 @@ export default function StudioEditorPage() {
             className="w-[340px] h-[620px] rounded-[36px] border-8 border-slate-900 overflow-y-auto shadow-xl relative"
             style={{ backgroundColor: t.bg, color: t.text }}
           >
+            {config.theme === 'garden' && <FloatingLeaves />}
             {/* Sampul Pembuka Preview */}
             {showCoverPreview && (
               <div className="absolute inset-0 z-10 flex flex-col justify-between items-center text-center p-6 text-white">

@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { getSupabase } from '@/lib/supabase';
+import FloatingLeaves from '@/components/FloatingLeaves';
 
 export interface InvitationConfig {
-  theme: 'sage' | 'gold' | 'rose' | 'dark';
+  theme: 'sage' | 'gold' | 'rose' | 'dark' | 'garden';
   font: 'font-script' | 'font-serif-elegant' | 'font-modern';
   groomName: string;
   groomParents: string;
@@ -46,6 +47,7 @@ const THEMES = {
   gold: { bg: '#fdfbf7', text: '#3d3122', card: '#ffffff', border: '#ede2cc', accent: '#b8860b' },
   rose: { bg: '#fff5f6', text: '#4a2c35', card: '#ffffff', border: '#f7dce1', accent: '#d46a7e' },
   dark: { bg: '#141417', text: '#f3f4f6', card: '#1f1f24', border: '#32323a', accent: '#d4af37' },
+  garden: { bg: '#f4f8f2', text: '#243b29', card: '#ffffff', border: '#d2e3cb', accent: '#4a7c59' },
 };
 
 export default function InvitationTemplate({
@@ -193,6 +195,7 @@ export default function InvitationTemplate({
         className="w-full max-w-md min-h-screen shadow-2xl relative overflow-hidden"
         style={{ backgroundColor: t.bg, color: t.text }}
       >
+        {config.theme === 'garden' && <FloatingLeaves fullScreen />}
         {/* Sampul Pembuka (Dikirim Untuk Siapa) */}
         {!isOpened && (
           <div className="fixed inset-0 z-50 flex justify-center bg-black/80">

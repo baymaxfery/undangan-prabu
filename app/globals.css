@@ -16,3 +16,42 @@
 .font-script { font-family: 'Great Vibes', cursive; }
 .font-serif-elegant { font-family: 'Cormorant Garamond', serif; }
 .font-modern { font-family: 'Poppins', sans-serif; }
+
+@keyframes leafFall {
+  0% {
+    transform: translateY(-10vh);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.85;
+  }
+  90% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(110vh);
+    opacity: 0;
+  }
+}
+
+@keyframes leafSway {
+  0% {
+    transform: translateX(-18px) rotate(-20deg);
+  }
+  100% {
+    transform: translateX(18px) rotate(25deg);
+  }
+}
+
+.animate-leaf-fall {
+  animation-name: leafFall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.animate-leaf-sway {
+  animation-name: leafSway;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
