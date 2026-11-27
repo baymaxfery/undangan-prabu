@@ -14,7 +14,13 @@ export async function POST(req: Request) {
     if (!cleanSlug) {
       return NextResponse.json({ error: 'Nama link wajib diisi.' }, { status: 400 });
     }
-
+const reserved = ['editor', 'api', 'admin', 'login'];
+    if (reserved.includes(cleanSlug)) {
+      return NextResponse.json(
+        { error: 'Nama link tersebut tidak tersedia, silakan pilih nama lain.' },
+        { status: 400 }
+      );
+    }
     const { data: existing } = await supabase
       .from('invitations')
       .select('id')
